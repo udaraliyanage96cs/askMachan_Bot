@@ -4,6 +4,25 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const axios = require('axios');
 const fs = require("fs");
 
+const { collection, addDoc }  = require("firebase/firestore");
+
+const { initializeApp } = require("firebase/app");
+const { getFirestore } = require("firebase/firestore");
+
+const firebaseConfig = {
+    apiKey: "AIzaSyCdFLG2G4MjLIh6MQVmWUCW2TikihqX67k",
+    authDomain: "telegrambot-b4649.firebaseapp.com",
+    projectId: "telegrambot-b4649",
+    storageBucket: "telegrambot-b4649.appspot.com",
+    messagingSenderId: "504761109009",
+    appId: "1:504761109009:web:c4db89d8b106cd39f13fb0",
+    measurementId: "G-RY79VLQGDR"
+};
+
+const apps = initializeApp(firebaseConfig);
+const db = getFirestore(apps);
+
+
 const app = express();
 
 const token = "6967992028:AAHin0HAu58uwWIGTAwYEOLETMHL7Ba3e_o";
@@ -26,12 +45,25 @@ const textOnly = async (reqBody) => {
 };
 
 
+async function addUserToFirestore(userId) {
+  const currentTime = new Date();
+  const docRef = await addDoc(collection(db, "Users"), {
+    userId: userId,
+    datetime: currentTime
+  });
+  console.log("Document written with ID: ", docRef.id);
+}
+
+
+
 app.get('/', (req, res) => {
   res.send('Hello, Express!');
 });
+
+
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
-
+  addUserToFirestore(chatId);
   try {
     let response = "";
 
