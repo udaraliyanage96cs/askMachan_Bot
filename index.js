@@ -45,10 +45,11 @@ const textOnly = async (reqBody) => {
 };
 
 
-async function addUserToFirestore(userId) {
+async function addUserToFirestore(userId,message) {
   const currentTime = new Date();
   const docRef = await addDoc(collection(db, "Users"), {
     userId: userId,
+    message:message,
     datetime: currentTime
   });
   console.log("Document written with ID: ", docRef.id);
@@ -63,7 +64,7 @@ app.get('/', (req, res) => {
 
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
-  addUserToFirestore(chatId);
+  addUserToFirestore(chatId,msg.text);
   try {
     let response = "";
 
