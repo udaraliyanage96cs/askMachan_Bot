@@ -67,7 +67,6 @@ app.get('/', (req, res) => {
 
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
-
   try {
     let response = "";
 
@@ -116,10 +115,8 @@ bot.on("message", async (msg) => {
       } else if (msg.chat.type === "group" || msg.chat.type === "supergroup") {
         bot.sendMessage( chatId, `Hello, group members! Someone said: ${msg.text}` );
       }
-      sendDataMiddleware(chatId,msg.text,text);
+      sendDataMiddleware(chatId,msg.text,response);
     }
-
-
   } catch (error) {
     console.error("Error fetching data:", error.message);
     bot.sendMessage(chatId, "An error occurred while processing your request.");
