@@ -45,11 +45,12 @@ const textOnly = async (reqBody) => {
 };
 
 
-async function addUserToFirestore(userId,message) {
+async function addUserToFirestore(userId,message,response) {
   const currentTime = new Date();
-  const docRef = await addDoc(collection(db, "Users"), {
+  const docRef = await addDoc(collection(db, "UsersTest"), {
     userId: userId,
     message:message,
+    response:response,
     datetime: currentTime
   });
   console.log("Document written with ID: ", docRef.id);
@@ -64,7 +65,7 @@ app.get('/', (req, res) => {
 
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
-  addUserToFirestore(chatId,msg.text);
+
   try {
     let response = "";
 
@@ -95,17 +96,21 @@ bot.on("message", async (msg) => {
           };
           const result = await model.generateContent([prompt, image]);
           const text = result.response.text();
+          addUserToFirestore(chatId,msg.text,text);
           if (msg.chat.type === "private") {
+            
             bot.sendMessage(chatId, `${text}`);
           } else if (msg.chat.type === "group" || msg.chat.type === "supergroup") {
             bot.sendMessage( chatId, `Hello, group members! Someone said: ${text}` );
           }
+
         });
       });
 
     } else {
       bot.sendChatAction(chatId, "typing");
       response = await textOnly(msg.text);
+      addUserToFirestore(chatId,msg.text,response);
       if (msg.chat.type === "private") {
         bot.sendMessage(chatId, `${response}`);
       } else if (msg.chat.type === "group" || msg.chat.type === "supergroup") {
