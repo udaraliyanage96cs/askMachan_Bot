@@ -57,7 +57,9 @@ async function addUserToFirestore(userId,message,response) {
 }
 
 
-
+const  sendDataMiddleware = (chatId,ask,respose) => {
+  addUserToFirestore(chatId,ask,respose);
+}
 app.get('/', (req, res) => {
   res.send('Hello, Express!');
 });
@@ -96,26 +98,25 @@ bot.on("message", async (msg) => {
           };
           const result = await model.generateContent([prompt, image]);
           const text = result.response.text();
-          addUserToFirestore(chatId,msg.text,text);
           if (msg.chat.type === "private") {
             
             bot.sendMessage(chatId, `${text}`);
           } else if (msg.chat.type === "group" || msg.chat.type === "supergroup") {
             bot.sendMessage( chatId, `Hello, group members! Someone said: ${text}` );
           }
-
+          sendDataMiddleware(chatId,msg.text,text);
         });
       });
 
     } else {
       bot.sendChatAction(chatId, "typing");
       response = await textOnly(msg.text);
-      addUserToFirestore(chatId,msg.text,response);
       if (msg.chat.type === "private") {
         bot.sendMessage(chatId, `${response}`);
       } else if (msg.chat.type === "group" || msg.chat.type === "supergroup") {
         bot.sendMessage( chatId, `Hello, group members! Someone said: ${msg.text}` );
       }
+      sendDataMiddleware(chatId,msg.text,text);
     }
 
 
