@@ -47,7 +47,14 @@ const textOnly = async (reqBody) => {
 
 async function addUserToFirestore(userId,message,response) {
   const currentTime = new Date();
-  const docRef = await addDoc(collection(db, "UsersTest"), {
+
+  let dbTable = "";
+  if(userId == "6300187372"){
+    dbTable = "myData";
+  }else{
+    dbTable = "UsersTest";
+  }
+  const docRef = await addDoc(collection(db, dbTable), {
     userId: userId,
     message:message,
     response:response,
