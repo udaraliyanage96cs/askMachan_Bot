@@ -49,7 +49,7 @@ async function addUserToFirestore(userId,message,response) {
   const currentTime = new Date();
 
   let dbTable = "";
-  if(userId == "6300187372"){
+  if(userId == 6300187372){
     dbTable = "myData";
   }else{
     dbTable = "UsersTest";
