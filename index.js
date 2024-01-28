@@ -35,7 +35,7 @@ const textOnly = async (reqBody) => {
   const prompt = `Imagine you are currently living Sri Lanka. I have a question to ask from you. I will attach it below. so think you are a 
     local tour guide and very polite and smiley person, answer the question as you consider you are a professional ture guide and you have great memory about 
     sri lankan history and well understanding the sri lankan culture and sociaty, religions and much more. so your anwser should be related to the question and give short and sweet anwser.
-    Do not add greeting text to your reply
+    Do not add greeting text to your reply. Also add declaimer about this is a AI generated replay  at the end of the response.
     My Question is :- ${reqBody}
     `;
   const result = await model.generateContent(prompt);
