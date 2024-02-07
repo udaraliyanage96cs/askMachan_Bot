@@ -3,6 +3,7 @@ const TelegramBot = require("node-telegram-bot-api");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const axios = require('axios');
 const fs = require("fs");
+require("dotenv").config();
 
 const { collection, addDoc }  = require("firebase/firestore");
 
@@ -10,8 +11,8 @@ const { initializeApp } = require("firebase/app");
 const { getFirestore } = require("firebase/firestore");
 
 const firebaseConfig = {
-    apiKey: "AIzaSyCdFLG2G4MjLIh6MQVmWUCW2TikihqX67k",
-    authDomain: "telegrambot-b4649.firebaseapp.com",
+    apiKey: process.env.FIREBASE_API_KEY,
+    authDomain: process.env.FIREBASE_AUTH_DOMAIN,
     projectId: "telegrambot-b4649",
     storageBucket: "telegrambot-b4649.appspot.com",
     messagingSenderId: "504761109009",
@@ -25,17 +26,17 @@ const db = getFirestore(apps);
 
 const app = express();
 
-const token = "6967992028:AAHin0HAu58uwWIGTAwYEOLETMHL7Ba3e_o";
+const token = process.env.TELEGRAM_TOKEN;
 const bot = new TelegramBot(token, { polling: true });
 
-const genAI = new GoogleGenerativeAI("AIzaSyBBk40GdC4cwITxkCsgT8vdChRpOUMFNGM");
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY);
 
 const textOnly = async (reqBody) => {
   const model = genAI.getGenerativeModel({ model: "gemini-pro" });
   const prompt = `Imagine you are currently living Sri Lanka. I have a question to ask from you. I will attach it below. so think you are a 
     local tour guide and very polite and smiley person, answer the question as you consider you are a professional ture guide and you have great memory about 
     sri lankan history and well understanding the sri lankan culture and sociaty, religions and much more. so your anwser should be related to the question and give short and sweet anwser.
-    Do not add greeting text to your reply
+    Do not add greeting text to your reply. Also add declaimer about this is a AI generated replay  at the end of the response.
     My Question is :- ${reqBody}
     `;
   const result = await model.generateContent(prompt);
@@ -45,18 +46,28 @@ const textOnly = async (reqBody) => {
 };
 
 
-async function addUserToFirestore(userId,message) {
+async function addUserToFirestore(userId,message,response) {
   const currentTime = new Date();
-  const docRef = await addDoc(collection(db, "Users"), {
+
+  let dbTable = "";
+  if(userId == 6300187372){
+    dbTable = "myData";
+  }else{
+    dbTable = "UsersTest";
+  }
+  const docRef = await addDoc(collection(db, dbTable), {
     userId: userId,
     message:message,
+    response:response,
     datetime: currentTime
   });
   console.log("Document written with ID: ", docRef.id);
 }
 
 
-
+const  sendDataMiddleware = (chatId,ask,respose) => {
+  addUserToFirestore(chatId,ask,respose);
+}
 app.get('/', (req, res) => {
   res.send('Hello, Express!');
 });
@@ -64,7 +75,6 @@ app.get('/', (req, res) => {
 
 bot.on("message", async (msg) => {
   const chatId = msg.chat.id;
-  addUserToFirestore(chatId,msg.text);
   try {
     let response = "";
 
@@ -96,10 +106,12 @@ bot.on("message", async (msg) => {
           const result = await model.generateContent([prompt, image]);
           const text = result.response.text();
           if (msg.chat.type === "private") {
+            
             bot.sendMessage(chatId, `${text}`);
           } else if (msg.chat.type === "group" || msg.chat.type === "supergroup") {
             bot.sendMessage( chatId, `Hello, group members! Someone said: ${text}` );
           }
+          sendDataMiddleware(chatId,msg.text,text);
         });
       });
 
@@ -111,9 +123,8 @@ bot.on("message", async (msg) => {
       } else if (msg.chat.type === "group" || msg.chat.type === "supergroup") {
         bot.sendMessage( chatId, `Hello, group members! Someone said: ${msg.text}` );
       }
+      sendDataMiddleware(chatId,msg.text,response);
     }
-
-
   } catch (error) {
     console.error("Error fetching data:", error.message);
     bot.sendMessage(chatId, "An error occurred while processing your request.");
